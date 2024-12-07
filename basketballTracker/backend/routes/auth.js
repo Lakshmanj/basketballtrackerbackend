@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../collections/User');
 const router = express.Router();
 
@@ -27,7 +28,8 @@ router.post('/users/signup', async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        const newUser = new User({ username, email, password });
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully' });
@@ -41,7 +43,12 @@ router.post('/users/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ email });
-        if (!user || user.password !== password) {
+        if (!user) {
+            return res.status(400).json({ error: 'Invalid email or password' });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
 
@@ -61,6 +68,15 @@ router.get('/users/me', authenticateToken, async (req, res) => {
         res.json(user);
     } catch (error) {
         res.status(500).json({ error: 'Error fetching user data' });
+    }
+});
+
+router.get('/users', async (req, res) => {
+    try {
+        const users = await User.find();  
+        res.json(users);  
+    } catch (error) {
+        res.status(500).json({ error: 'Error fetching users' });
     }
 });
 

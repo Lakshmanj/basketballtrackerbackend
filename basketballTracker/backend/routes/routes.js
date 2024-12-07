@@ -6,38 +6,38 @@ const router = express.Router();
 
 router.use(cors());
 
-router.get('/scores', authenticateToken, async (req, res) => {
+
+
+router.get('/scores', async (req, res) => {
     try {
+        const { league, season, team, date } = req.query;
+
+        
+        console.log('Received query:', { league, season, team, date });
+
         const response = await axios.get('https://v1.basketball.api-sports.io/games', {
             headers: {
                 'x-apisports-key': process.env.API_KEY,
-                'Authorization': req.header('Authorization'),
+                'x-apisports-host': 'v1.basketball.api-sports.io'
             },
             params: {
-                date: req.query.date || new Date().toISOString().split('T')[0],
-                league: req.query.league || '123',
-                season: req.query.season || '2024-2025',
-                team: req.query.team,
-                gameType: req.query.gameType,
+                league,
+                season,
+                team,
+                date,
             },
         });
 
-        const games = response.data.response;
-        res.json(games);
+        
+        console.log('External API response:', response.data);
+
+        res.json(response.data.response); 
     } catch (error) {
-        console.error('Error fetching scores:', error.message);
-        if (error.response) {
-            res.status(error.response.status).json({
-                error: 'Failed to fetch live scores',
-                details: error.response.data,
-            });
-        } else {
-            res.status(500).json({
-                error: 'Failed to fetch live scores',
-                details: error.message,
-            });
-        }
+        console.error('Error fetching scores from external API:', error.message);
+        res.status(500).json({ error: 'Failed to fetch scores', details: error.message });
     }
 });
+
+
 
 module.exports = router;
