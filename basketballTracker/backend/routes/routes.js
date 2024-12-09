@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(cors());
 
-// Existing scores route
+
 router.get('/scores', async (req, res) => {
     try {
         const { league, season, team, date } = req.query;
@@ -35,7 +35,7 @@ router.get('/scores', async (req, res) => {
     }
 });
 
-// New upcoming games route
+
 router.get('/upcoming', authenticateToken, async (req, res) => {
     try {
         const { favoriteTeam, league, season } = req.query;
